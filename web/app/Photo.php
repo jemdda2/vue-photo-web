@@ -10,12 +10,27 @@ class Photo extends Model
 {
     /** プライマリキー */
     protected $keyType = 'string';
-
-    
+  
     /** IDの桁数 */
     const ID_LENGTH = 12;
     
     protected $perPage = 9;
+    
+    /** JSONに含める属性 */
+    protected $appends = [
+        'url',
+    ];
+
+    /** JSONに含めない属性 */
+    protected $hidden = [
+        'user_id', 'filename',
+        self::CREATED_AT, self::UPDATED_AT,
+    ];
+
+    /** JSONに含める属性 */
+    protected $visible = [
+        'id', 'owner', 'url', 'comments',
+    ];
 
     public function __construct(array $attributes = [])
     {
@@ -63,6 +78,16 @@ class Photo extends Model
     {
         return $this->belongsTo('App\User', 'user_id', 'id', 'users');
     }
+    
+    /**
+     * リレーションシップ - commentsテーブル
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function comments()
+    {
+        return $this->hasMany('App\Comment')->orderBy('id', 'desc');
+    }
+
     /**
      * アクセサ - url
      * @return string
@@ -71,20 +96,4 @@ class Photo extends Model
     {
         return Storage::cloud()->url($this->attributes['filename']);
     }
-
-    /** JSONに含める属性 */
-    protected $appends = [
-        'url',
-    ];
-
-    /** JSONに含めない属性 */
-    protected $hidden = [
-        'user_id', 'filename',
-        self::CREATED_AT, self::UPDATED_AT,
-    ];
-
-    /** JSONに含める属性 */
-    protected $visible = [
-        'id', 'owner', 'url',
-    ];
 }
