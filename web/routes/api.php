@@ -14,5 +14,8 @@ Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
 // ログインユーザー
 Route::get('/user', fn() => Auth::user())->name('user');
 
-//　しゃしんとうこう
+// しゃしんとうこう
 Route::post('/photos', 'PhotoController@create')->name('photo.create');
+
+// 写真一蘭
+Route::get('/photos', 'PhotoController@index')->name('photo.index');
