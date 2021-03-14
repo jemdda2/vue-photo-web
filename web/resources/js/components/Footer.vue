@@ -15,7 +15,7 @@ import { mapState, mapGetters } from 'vuex'
 export default {
 	computed: {
 		...mapState({
-			apiSttus: state => state.auth.apiSttus
+			apiStatus: state => state.auth.apiStatus
 		}),
 		...mapGetters({
 			isLogin: 'auth/check'
@@ -25,7 +25,7 @@ export default {
 		async logout() {
 			await this.$store.dispatch('auth/logout')
 
-			if (this.apiSttus) {
+			if (this.apiStatus) {
 				this.$router.push('/login')
 			}
 		}

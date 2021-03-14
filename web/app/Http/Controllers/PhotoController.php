@@ -20,6 +20,17 @@ class PhotoController extends Controller
     }
 
     /**
+     * 写真一蘭
+     */
+    public function index()
+    {
+        $photos = Photo::with(['owner', 'likes'])
+            ->orderBy(Photo::CREATED_AT, 'desc')->paginate();
+
+        return $photos;
+    }
+
+    /**
      * 写真投稿
      * @param StorePhoto $request
      * @return \Illuminate\Http\Response
@@ -60,17 +71,6 @@ class PhotoController extends Controller
     }
 
     /**
-     * 写真一蘭
-     */
-    public function index()
-    {
-        $photos = Photo::with(['owner'])
-            ->orderBy(Photo::CREATED_AT, 'desc')->paginate();
-
-        return $photos;
-    }
-
-    /**
      * 写真ダウンロード
      * @param Photo $photo
      * @return \Illuminate\Http\Response
@@ -81,12 +81,14 @@ class PhotoController extends Controller
         if (! Storage::cloud()->exists($photo->filename)) {
             abort(404);
         }
-
+    
         $disposition = 'attachment; filename="' . $photo->filename . '"';
         $headers = [
             'Content-Type' => 'application/octet-stream',
             'Content-Disposition' => $disposition,
         ];
+        
+        dd($disposition);
 
         return response(Storage::cloud()->get($photo->filename), 200, $headers);
     }
@@ -99,7 +101,7 @@ class PhotoController extends Controller
     public function show(string $id)
     {
         $photo = Photo::where('id', $id)
-            ->with(['owner', 'comments.author'])->first();
+            ->with(['owner', 'comments.author', 'likes'])->first();
 
         return $photo ?? abort(404);
     }
@@ -119,7 +121,43 @@ class PhotoController extends Controller
 
         // authorリレーションをロードするためにコメントを取得しなおす
         $new_comment = Comment::where('id', $comment->id)->with('author')->first();
-
         return response($new_comment, 201);
+    }
+
+    /**
+     * いいね
+     * @param string $id
+     * @return array
+     */
+    public function like(string $id)
+    {
+        $photo = Photo::where('id', $id)->with('likes')->first();
+
+        if (! $photo) {
+            abort(404);
+        }
+
+        $photo->likes()->detach(Auth::user()->id);
+        $photo->likes()->attach(Auth::user()->id);
+
+        return ["photo_id" => $id];
+    }
+
+    /**
+     * いいね解除
+     * @param string $id
+     * @return array
+     */
+    public function unlike(string $id)
+    {
+        $photo = Photo::where('id', $id)->with('likes')->first();
+
+        if (! $photo) {
+            abort(404);
+        }
+
+        $photo->likes()->detach(Auth::user()->id);
+
+        return ["photo_id" => $id];
     }
 }
